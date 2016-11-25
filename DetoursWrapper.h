@@ -35,6 +35,7 @@ public:
 			return FALSE;
 
 		DetourTransactionBegin();
+		DetourUpdateThread(GetCurrentThread());
 		printf("Attach %d\n", (u_int)tab.mOldFun);
 		DetourAttach(tab.mOldFun, tab.mNewFun);
 
@@ -58,6 +59,7 @@ public:
 		mFunTable.erase(it);
 		
 		DetourTransactionBegin();
+		DetourUpdateThread(GetCurrentThread());
 		printf("Detach %d\n", (u_int)tab.mOldFun);
 		DetourDetach(&(PVOID&)oldfun, (PVOID)newfun);
 			
