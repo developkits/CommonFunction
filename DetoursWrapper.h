@@ -46,8 +46,8 @@ public:
 		return ret == NO_ERROR;
 	}
 
-	template <typename T>
-	bool Detach(T oldfun, T newfun)
+	template <typename T1, typename T2>
+	bool Detach(T1 oldfun, T2 newfun)
 	{
 		FunTable tab;
 		tab.mOldFun = &(PVOID&)oldfun;
@@ -99,4 +99,21 @@ public:
 			DetourDetach(tab.mOldFun, tab.mNewFun);
 		}
 	}
-}; 
+};
+
+#define DETOURS_FUNC_IMPLEMENT(RetType, CallType, FunctionName, ...) \
+	RetType CallType Hook_##FunctionName(## __VA_ARGS__)
+
+#define DETOURS_FUNC_DECLARE(RetType, CallType, FunctionName, ...) \
+	typedef RetType(CallType *FuncDefine_##FunctionName)(## __VA_ARGS__); \
+	FuncDefine_##FunctionName Real_##FunctionName = (FuncDefine_##FunctionName)FunctionName; \
+	RetType CallType Hook_##FunctionName(## __VA_ARGS__)
+
+#define DETOURS_FUNC_CALLREAL(FunctionName, ...) \
+	Real_##FunctionName(## __VA_ARGS__);
+
+#define DETOURS_FUNC_ATTACH(FunctionName) \
+	Detours::Instance()->Attach(Real_##FunctionName, Hook_##FunctionName);
+
+#define DETOURS_FUNC_DETACH(FunctionName) \
+	Detours::Instance()->Detach(Real_##FunctionName, Hook_##FunctionName);

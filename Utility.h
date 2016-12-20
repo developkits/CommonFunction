@@ -1,19 +1,104 @@
 #pragma once
 
+#include <WinDef.h>
 #include <Tlhelp32.h>
 #include <io.h>
+#include <sstream>
 
 using namespace std;
 
 class Utility
 {
 public:
+	static void RunMessageLoop()
+	{
+		MSG msg;
+		if (::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+		{
+			::TranslateMessage(&msg);
+			::DispatchMessage(&msg);
+		}
+	}
 	static BOOL IsWinXP()
 	{
 		OSVERSIONINFO version;
 		version.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 		::GetVersionEx(&version);
 		return version.dwMajorVersion <= 5;
+	}
+
+	template<class T>
+	static std::string ToString(T i)
+	{
+		ostringstream s;
+		s << i;
+		return s.str();
+	}
+	static int64_t StringToInt(const char* str, int base = 10)
+	{
+#ifdef _MSC_VER
+		return _strtoui64(str, nullptr, base);
+#else
+		return strtoull(str, nullptr, base);
+#endif
+	}
+
+	static unsigned char ToHex(unsigned char x)
+	{
+		return  x > 9 ? x + 55 : x + 48;
+	}
+
+	static unsigned char FromHex(unsigned char x)
+	{
+		unsigned char y;
+		if (x >= 'A' && x <= 'Z') y = x - 'A' + 10;
+		else if (x >= 'a' && x <= 'z') y = x - 'a' + 10;
+		else if (x >= '0' && x <= '9') y = x - '0';
+		else assert(0);
+		return y;
+	}
+
+	static std::string UrlEncode(const std::string& str)
+	{
+		std::string strTemp = "";
+		size_t length = str.length();
+		for (size_t i = 0; i < length; i++)
+		{
+			if (isalnum((unsigned char)str[i]) ||
+				(str[i] == '-') ||
+				(str[i] == '_') ||
+				(str[i] == '.') ||
+				(str[i] == '~'))
+				strTemp += str[i];
+			else if (str[i] == ' ')
+				strTemp += "+";
+			else
+			{
+				strTemp += '%';
+				strTemp += ToHex((unsigned char)str[i] >> 4);
+				strTemp += ToHex((unsigned char)str[i] % 16);
+			}
+		}
+		return strTemp;
+	}
+
+	static std::string UrlDecode(const std::string& str)
+	{
+		std::string strTemp = "";
+		size_t length = str.length();
+		for (size_t i = 0; i < length; i++)
+		{
+			if (str[i] == '+') strTemp += ' ';
+			else if (str[i] == '%')
+			{
+				assert(i + 2 < length);
+				unsigned char high = FromHex((unsigned char)str[++i]);
+				unsigned char low = FromHex((unsigned char)str[++i]);
+				strTemp += high * 16 + low;
+			}
+			else strTemp += str[i];
+		}
+		return strTemp;
 	}
 	static std::wstring UTF8ToWString(const char* lpcszString)
 	{
