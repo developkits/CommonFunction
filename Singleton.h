@@ -9,4 +9,11 @@ public:
 		static T s_instance;
 		return &s_instance;
 	}
+
+	virtual bool Init() = 0;
+	virtual void Uninit() = 0;
+
+protected:
+	Singleton() {};
+	virtual ~Singleton(){};
 };

@@ -4,8 +4,18 @@
 #include <Tlhelp32.h>
 #include <io.h>
 #include <sstream>
+#include <tchar.h>
+#include <Shlwapi.h>
+#include <algorithm>
+#include <assert.h>
 
 using namespace std;
+
+#ifdef UNICODE
+typedef std::wstring StdString;
+#else
+typedef std::string StdString;
+#endif
 
 class Utility
 {
@@ -41,6 +51,25 @@ public:
 #else
 		return strtoull(str, nullptr, base);
 #endif
+	}
+
+#ifdef UNICODE
+	static const wstring & GetExePath()
+	{
+		static wstring sPath;
+#else
+	static const string & GetExePath()
+	{
+		static string sPath;
+#endif
+		if (sPath == _T(""))
+		{
+			TCHAR szPath[MAX_PATH] = _T("\0");
+			GetModuleFileName(NULL, szPath, MAX_PATH);
+			PathRemoveFileSpec(szPath);
+			sPath = szPath;
+		}
+		return sPath;
 	}
 
 	static unsigned char ToHex(unsigned char x)
@@ -150,6 +179,51 @@ public:
 		delete[] pElementText;
 		return strReturn;
 	}
+
+#ifdef UNICODE
+	static std::wstring ToStdString(const char * lpcszString)
+	{
+		return UTF8ToWString(lpcszString);
+	}
+	static std::wstring ToStdString(const wchar_t * lpwcszWString)
+	{
+		return lpwcszWString;
+	}
+#else
+	static std::string ToStdString(const char * lpcszString)
+	{
+		return lpcszString;
+	}
+	static std::string ToStdString(const wchar_t * lpwcszWString)
+	{
+		return WStringToUTF8(lpwcszWString);
+	}
+#endif
+	/// Try to find in the Haystack the Needle - ignore case
+	static bool findStringIC(const StdString & strHaystack, const StdString & strNeedle)
+	{
+		auto it = std::search(
+			strHaystack.begin(), strHaystack.end(),
+			strNeedle.begin(), strNeedle.end(),
+#ifdef UNICODE
+			[](wchar_t ch1, wchar_t ch2) { return toupper(ch1) == toupper(ch2); }
+#else
+			[](char ch1, char ch2) { return toupper(ch1) == toupper(ch2); }
+#endif
+		);
+		if (it != strHaystack.end()) return true;
+		return false;
+	}
+
+	static void replaceString(StdString & str, const StdString & searchString, const StdString & replaceString)
+	{
+		string::size_type pos = 0;
+		while ((pos = str.find(searchString, pos)) != string::npos) {
+			str.replace(pos, searchString.size(), replaceString);
+			pos++;
+		}
+	}
+
 	template<typename dst_type, typename src_type>
 	static dst_type Pointer_Cast(src_type src)
 	{

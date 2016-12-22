@@ -4,6 +4,7 @@
 #include <detours.h>
 #include <assert.h>
 #include "Singleton.h"
+#include "StdLog.h"
 
 #pragma comment(lib, "detours.lib")
 
@@ -36,7 +37,7 @@ public:
 
 		DetourTransactionBegin();
 		DetourUpdateThread(GetCurrentThread());
-		printf("Attach %d\n", (u_int)tab.mOldFun);
+		printf("Attach %d\n", (unsigned int)tab.mOldFun);
 		DetourAttach(tab.mOldFun, tab.mNewFun);
 
 		mFunTable.push_back(tab);
@@ -60,7 +61,7 @@ public:
 		
 		DetourTransactionBegin();
 		DetourUpdateThread(GetCurrentThread());
-		printf("Detach %d\n", (u_int)tab.mOldFun);
+		printf("Detach %d\n", (unsigned int)tab.mOldFun);
 		DetourDetach(&(PVOID&)oldfun, (PVOID)newfun);
 			
 		bool ret = Commit() == NO_ERROR;
@@ -76,24 +77,22 @@ public:
 	{
 		return DetourTransactionCommit();
 	}
-	void Release()
-	{
-		delete this;
-	}
 
-	Detours(void)
+	virtual bool Init()
 	{
 		DetourRestoreAfterWith();
 		DetourTransactionBegin();
 		DetourUpdateThread(GetCurrentThread());
+
+		return true;
 	}
 
-	~Detours(void)
+	virtual void Uninit()
 	{
 		DetourTransactionBegin();
 		DetourUpdateThread(GetCurrentThread());
 
-		for (u_int a = 0; a < mFunTable.size(); a++)
+		for (unsigned int a = 0; a < mFunTable.size(); a++)
 		{
 			FunTable & tab = mFunTable[a];
 			DetourDetach(tab.mOldFun, tab.mNewFun);
