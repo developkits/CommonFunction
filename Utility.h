@@ -5,7 +5,6 @@
 #include <io.h>
 #include <sstream>
 #include <tchar.h>
-#include <Shlwapi.h>
 #include <algorithm>
 #include <assert.h>
 
@@ -53,20 +52,14 @@ public:
 #endif
 	}
 
-#ifdef UNICODE
-	static const wstring & GetExePath()
+	static const StdString & GetExePath()
 	{
-		static wstring sPath;
-#else
-	static const string & GetExePath()
-	{
-		static string sPath;
-#endif
+		static StdString sPath;
 		if (sPath == _T(""))
 		{
 			TCHAR szPath[MAX_PATH] = _T("\0");
 			GetModuleFileName(NULL, szPath, MAX_PATH);
-			PathRemoveFileSpec(szPath);
+			(_tcsrchr(szPath, _T('\\')))[0] = 0;
 			sPath = szPath;
 		}
 		return sPath;
@@ -205,11 +198,7 @@ public:
 		auto it = std::search(
 			strHaystack.begin(), strHaystack.end(),
 			strNeedle.begin(), strNeedle.end(),
-#ifdef UNICODE
-			[](wchar_t ch1, wchar_t ch2) { return toupper(ch1) == toupper(ch2); }
-#else
-			[](char ch1, char ch2) { return toupper(ch1) == toupper(ch2); }
-#endif
+			[](TCHAR ch1, TCHAR ch2) { return toupper(ch1) == toupper(ch2); }
 		);
 		if (it != strHaystack.end()) return true;
 		return false;
