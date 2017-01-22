@@ -269,7 +269,7 @@ namespace Library
 		}
 	}
 
-	tm DataTimeHelper::GetTMTime(const time_t* INtime, bool INlocal)
+	tm DataTimeHelper::GetTMTime(const time_t* INtime, bool /*INlocal*/)
 	{
 #if WIN32
 		//if(INlocal)

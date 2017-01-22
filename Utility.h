@@ -7,13 +7,18 @@
 #include <tchar.h>
 #include <algorithm>
 #include <assert.h>
+#include <fstream>
 
 using namespace std;
 
 #ifdef UNICODE
 typedef std::wstring StdString;
+typedef std::wostringstream StdStringStream;
+typedef std::wofstream StdOFStream;
 #else
 typedef std::string StdString;
+typedef std::ostringstream StdStringStream;
+typedef std::ofstream StdOFStream;
 #endif
 
 class Utility
@@ -37,9 +42,9 @@ public:
 	}
 
 	template<class T>
-	static std::string ToString(T i)
+	static StdString ToString(T i)
 	{
-		ostringstream s;
+		StdStringStream s;
 		s << i;
 		return s.str();
 	}
@@ -50,6 +55,53 @@ public:
 #else
 		return strtoull(str, nullptr, base);
 #endif
+	}
+
+	static std::string std_string_format(const char * _Format, ...) {
+		std::string tmp;
+
+		va_list marker = NULL;
+		va_start(marker, _Format);
+
+		size_t num_of_chars = _vscprintf(_Format, marker);
+
+		if (num_of_chars > tmp.capacity()) {
+			tmp.resize(num_of_chars + 1);
+		}
+
+		vsprintf_s((char *)tmp.data(), tmp.capacity(), _Format, marker);
+
+		va_end(marker);
+
+		return tmp;
+	}
+
+	static void std_string_split(std::string& s, std::string& delim, std::vector< std::string >* ret)
+	{
+		size_t last = 0;
+		size_t index = s.find_first_of(delim, last);
+		while (index != std::string::npos)
+		{
+			ret->push_back(s.substr(last, index - last));
+			last = index + 1;
+			index = s.find_first_of(delim, last);
+		}
+		if (index - last>0)
+		{
+			ret->push_back(s.substr(last, index - last));
+		}
+	}
+
+	static std::string& std_string_trim(std::string &s, const char *str = " ")
+	{
+		if (s.empty())
+		{
+			return s;
+		}
+
+		s.erase(0, s.find_first_not_of(str));
+		s.erase(s.find_last_not_of(str) + 1);
+		return s;
 	}
 
 	static const StdString & GetExePath()
@@ -124,7 +176,6 @@ public:
 	}
 	static std::wstring UTF8ToWString(const char* lpcszString)
 	{
-		int len = strlen(lpcszString);
 		int unicodeLen = ::MultiByteToWideChar(CP_UTF8, 0, lpcszString, -1, NULL, 0);
 		wchar_t* pUnicode;
 		pUnicode = new wchar_t[unicodeLen + 1];
@@ -149,7 +200,6 @@ public:
 
 	static std::wstring MBytesToWString(const char* lpcszString)
 	{
-		int len = strlen(lpcszString);
 		int unicodeLen = ::MultiByteToWideChar(CP_ACP, 0, lpcszString, -1, NULL, 0);
 		wchar_t* pUnicode = new wchar_t[unicodeLen + 1];
 		memset(pUnicode, 0, (unicodeLen + 1) * sizeof(wchar_t));
@@ -171,6 +221,12 @@ public:
 		std::string strReturn(pElementText);
 		delete[] pElementText;
 		return strReturn;
+	}
+
+	static void ClearFile(LPCTSTR file)
+	{
+		StdOFStream rmfile(file);
+		rmfile.close();
 	}
 
 #ifdef UNICODE
