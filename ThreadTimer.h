@@ -45,6 +45,7 @@ public:
 		pParam->hWaitEvent = (HANDLE)CreateEvent(NULL, TRUE, FALSE, NULL);
 		pParam->hThreadID = (HANDLE)_beginthreadex(NULL, 0, ThreadTimerProc<T>, (LPVOID)pParam, 0, NULL);
 
+		SetThreadPriority(pParam->hThreadID, THREAD_PRIORITY_HIGHEST);
 		m_ThreadTimerParams[uID] = pParam;
 
 		return uID;

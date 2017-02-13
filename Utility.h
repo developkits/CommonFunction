@@ -42,20 +42,31 @@ public:
 	}
 
 	template<class T>
-	static StdString ToString(T i)
+	static std::string ToString(T i)
+	{
+		stringstream s;
+		s << i;
+		return s.str();
+	}
+	template<class T>
+	static StdString ToStdString(T i)
 	{
 		StdStringStream s;
 		s << i;
 		return s.str();
 	}
+
+#ifdef UNICODE
+	static int64_t StringToInt(const wchar_t* str, int base = 10)
+	{
+		return _wcstoui64(str, nullptr, base);
+	}
+#else
 	static int64_t StringToInt(const char* str, int base = 10)
 	{
-#ifdef _MSC_VER
 		return _strtoui64(str, nullptr, base);
-#else
-		return strtoull(str, nullptr, base);
-#endif
 	}
+#endif
 
 	static std::string std_string_format(const char * _Format, ...) {
 		std::string tmp;

@@ -45,7 +45,7 @@ public:
 	//	hIcon 		- The icon to display 
 	// 	nID		- The resource ID of the context menu 
 	/// returns true on success 
-	bool InstallIcon(LPCTSTR lpszToolTip, HICON hIcon, UINT nID)
+	bool InstallTrayIcon(LPCTSTR lpszToolTip, HICON hIcon, UINT nID)
 	{
 		T* pT = static_cast<T*>(this);
 		// Fill in the data		 
@@ -100,11 +100,10 @@ public:
 
 	LRESULT OnTrayIcon(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 	{
+		bHandled = FALSE;
 		// Is this the ID we want? 
 		if (wParam != m_nid.uID)
 			return 0;
-
-		bHandled = TRUE;
 
 		T* pT = static_cast<T*>(this);
 		// Was the right-button clicked? 
@@ -160,6 +159,7 @@ public:
 			// Done 
 			oMenu.DestroyMenu();
 		}
+		bHandled = TRUE;
 		return 0;
 	}
 

@@ -15,5 +15,9 @@ public:
 
 protected:
 	Singleton() {};
-	virtual ~Singleton(){};
+	virtual ~Singleton() {};
+
+private:
+	Singleton(const Singleton&);
+	Singleton& operator = (const Singleton&);
 };

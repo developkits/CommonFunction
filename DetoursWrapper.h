@@ -109,7 +109,7 @@ public:
 	RetType CallType Hook_##FunctionName(## __VA_ARGS__)
 
 #define DETOURS_FUNC_CALLREAL(FunctionName, ...) \
-	Real_##FunctionName(## __VA_ARGS__);
+	Real_##FunctionName(## __VA_ARGS__)
 
 #define DETOURS_FUNC_ATTACH(FunctionName) \
 	Detours::Instance()->Attach(Real_##FunctionName, Hook_##FunctionName);
