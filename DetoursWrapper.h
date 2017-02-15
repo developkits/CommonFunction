@@ -37,7 +37,6 @@ public:
 
 		DetourTransactionBegin();
 		DetourUpdateThread(GetCurrentThread());
-		printf("Attach %d\n", (unsigned int)tab.mOldFun);
 		DetourAttach(tab.mOldFun, tab.mNewFun);
 
 		mFunTable.push_back(tab);
@@ -48,7 +47,7 @@ public:
 	}
 
 	template <typename T1, typename T2>
-	bool Detach(T1 oldfun, T2 newfun)
+	bool Detach(T1 & oldfun, T2 & newfun)
 	{
 		FunTable tab;
 		tab.mOldFun = &(PVOID&)oldfun;
@@ -56,15 +55,13 @@ public:
 		auto it = find(mFunTable.begin(), mFunTable.end(), tab);
 		if (it == mFunTable.end())
 			return FALSE;
-
-		mFunTable.erase(it);
 		
 		DetourTransactionBegin();
 		DetourUpdateThread(GetCurrentThread());
-		printf("Detach %d\n", (unsigned int)tab.mOldFun);
-		DetourDetach(&(PVOID&)oldfun, (PVOID)newfun);
+		DetourDetach(tab.mOldFun, tab.mNewFun);
 			
 		bool ret = Commit() == NO_ERROR;
+		mFunTable.erase(it);
 		return ret;
 	}
 
@@ -102,6 +99,14 @@ public:
 
 #define DETOURS_FUNC_IMPLEMENT(RetType, CallType, FunctionName, ...) \
 	RetType CallType Hook_##FunctionName(## __VA_ARGS__)
+
+#define DETOURS_FUNC_DECLARE_VOID(RetType, CallType, FunctionName) \
+	typedef RetType(CallType *FuncDefine_##FunctionName)(); \
+	FuncDefine_##FunctionName Real_##FunctionName = (FuncDefine_##FunctionName)FunctionName; \
+	RetType CallType Hook_##FunctionName()
+
+#define DETOURS_FUNC_CALLREAL_VOID(FunctionName) \
+	Real_##FunctionName()
 
 #define DETOURS_FUNC_DECLARE(RetType, CallType, FunctionName, ...) \
 	typedef RetType(CallType *FuncDefine_##FunctionName)(## __VA_ARGS__); \

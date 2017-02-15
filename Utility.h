@@ -6,6 +6,7 @@
 #include <sstream>
 #include <tchar.h>
 #include <algorithm>
+#include <vector>
 #include <assert.h>
 #include <fstream>
 
